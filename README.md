@@ -1,1 +1,1 @@
-do this work ?
+# League of Legends Stat-Centric Discord Bot
