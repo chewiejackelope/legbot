@@ -20,7 +20,7 @@ module.exports = {
                 username = username.concat(args[i] + "+");
             }
             username = username.substr(0, username.length - 1);
-            run(urlbase + username, msg).then(() => {sleep(2000)}).then(() => {request(urlbase + username, function (error, response, body) {
+            run(urlbase + username, msg).then(() => {request(urlbase + username, function (error, response, body) {
                 try {
                     var $ = cheerio.load(body);
                     var rank = $('.TierRank');
@@ -59,8 +59,6 @@ module.exports = {
                     }
                     var long = $('.GameStats > .TimeStamp').find('span')[0]["attribs"]["data-datetime"];
                     long = Math.round(msg.createdTimestamp / 1000);
-                    console.log(String(long))
-                    console.log($('.GameStats > .TimeStamp').find('span')['1']["attribs"]["data-datetime"]);
                     var lastKP = $('.CKRate').text().split("\n");
                     var lastTime = $('.GameLength').text().split("s");
                     var lastCS = $('.CS').text().split("\n");
@@ -72,6 +70,7 @@ module.exports = {
                         .setURL('https://matias.ma/nsfw/')
                         .setColor('#0099ff')
                         .addFields(
+                            // i am deeply sorry in advance
                             { name: 'Ranked Win/Loss: ' + wlstr, value: 'Winrate: ' + wr.substr(10, wr.length)},
                             { name: '\u200B', value: 'Last 3 Games:' },
                             { name: lastResults[0].replace("\t\t\t\t\t\t\t\t\t", "") + "!\n" + 
@@ -144,16 +143,38 @@ function run (url, msg) {
             });
             const page = await browser.newPage();
             await page.goto(url);
-            await Promise.all([
-                await page.click('.Button'),
-                await page.waitForSelector('.Button')
-            ])
-            browser.close();
-            msg.channel.send("User's OP.GG has been refreshed!");
-            return resolve(url);
+            try {
+                await page.click('.Button.SemiRound');
+            }
+            catch (error) {
+                msg.channel.send("User does not exist");
+                browser.close();
+                return reject(error)
+            }
+            try {
+                await page.waitForSelector('.Button.SemiRound.Green', {timeout: 10000})
+                let element = await page.$('.Button.SemiRound.Green');
+                let value = await page.evaluate(el => el.textContent, element)
+                if (value.includes("Updated")) {
+                    browser.close();
+                    msg.channel.send("User's OP.gg has been refreshed!");
+                    return resolve(url);
+                }
+                else {
+                    msg.channel.send("User's OP.gg is up to date");
+                    browser.close();
+                    return resolve(url)
+                }
+            }
+            catch (error) {
+                msg.channel.send("User's OP.gg is up to date");
+                console.log("timeout")
+                browser.close();
+                return resolve(error)
+            }
         }
         catch (error) {
-            msg.channel.send("User does not exist");
+            msg.channel.send("Error updating OP.gg!");
             return reject(error);
         }
     })
