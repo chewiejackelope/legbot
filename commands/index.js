@@ -3,5 +3,4 @@ module.exports = {
   Opgg: require('./opgg'),
   Reload: require('./reload'),
   Help: require('./help'),
-  Refresh: require('./refresh'),
 };
