@@ -8,7 +8,7 @@ var RSDict = {"Aftershock" : "<:Aftershock_rune:794282914317205524>",  "Electroc
 
 module.exports = {
     name: 'opgg',
-    description: 'Get OP.GG of specified user [EXPERIMENTAL]',
+    description: 'Get OP.GG of specified user',
     execute(msg, args) {
         try{
             msg.channel.send("Refreshing OP.GG...");
