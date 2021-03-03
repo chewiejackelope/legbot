@@ -104,16 +104,19 @@ module.exports = {
                                                             RSDict[summs[5]["attribs"]["alt"]] + ' | ' + lastCS[5].replace("\t\t\t\t\t", ""), inline: true },
                         );
                     msg.channel.send(embed);
+                    return;
                         }
                         catch (error) {
                             console.log(error);
                             msg.channel.send("User has no data this season!");
+                            return;
                         }
             })}).catch(console.error);
         }
         catch (error) {
             console.log(error.toString());
             msg.channel.send("There was an issue executing that command!");
+            return;
         }
     },
   };
@@ -142,13 +145,13 @@ function get_dhm(seconds) {
 
 function run (url, msg) {
     return new Promise(async (resolve, reject) => {
+        const browser = await puppeteer.launch({
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+            ]
+        });
         try {
-            const browser = await puppeteer.launch({
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                ]
-            });
             const page = await browser.newPage();
             await page.goto(url);
             try {
@@ -183,6 +186,7 @@ function run (url, msg) {
         }
         catch (error) {
             msg.channel.send("Error updating OP.gg!");
+            browser.close();
             return reject(error);
         }
     })
