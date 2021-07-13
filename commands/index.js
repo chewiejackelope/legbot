@@ -3,4 +3,5 @@ module.exports = {
   Opgg: require('./opgg'),
   Reload: require('./reload'),
   Help: require('./help'),
+  Profile: require('./profile'),
 };
