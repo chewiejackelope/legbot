@@ -8,6 +8,8 @@ module.exports = {
     execute(msg, args, APIKEY) {
         try{ 
             console.log(args);
+            var fr = new FileReader();
+            var champions = JSON.parse(fr.readAsText("resources/dragontail/11.14.1/data/en_US/champion.json"))
             var platform = "na1";
             var region = "americas";
             if (String(args[0]).substr(0, 2) == "--") {
@@ -60,10 +62,17 @@ module.exports = {
                                 var rankl = rank[rank.length-1];
                                 var rankCase =  rankl.tier.substr(0, 1) +
                                                 rankl.tier.substr(1).toLowerCase();
+                                var win = "Win!";
+                                if (match.info.gameDuration < 300000) {
+                                    win = "Remake";
+                                }
+                                if (info.win == false) {
+                                    win = "Loss";
+                                }
                                 var embed = new MessageEmbed()
                                     .setTitle(rankCase + " " + rankl.rank + " " + 
                                         String(rankl.leaguePoints) + " LP")
-                                    .attachFiles("./commands/images/Emblem_" + 
+                                    .attachFiles("resources/images/Emblem_" + 
                                         rankl.tier + ".png")
                                     .setThumbnail("attachment://Emblem_" + 
                                         rankl.tier + ".png")
@@ -74,7 +83,10 @@ module.exports = {
                                         value: "Winrate: " + 
                                             String(Math.round(
                                             rankl.wins/(rankl.losses + 
-                                            rankl.wins) * 100)) + "%"}
+                                            rankl.wins) * 100)) + "%"},
+                                        {   name: "Most recent game:", 
+                                            value: win + "\n" } 
+                                            //info.
                                     );
                                 msg.channel.send(embed);
                             });
