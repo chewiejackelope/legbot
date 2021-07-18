@@ -7,43 +7,132 @@ module.exports = {
     description: 'Get profile of specified user',
     execute(msg, args, APIKEY) {
         try{ 
-            msg.channel.send("Getting data...");
             console.log(args);
-            //msg.channel.send("", {files: ["./commands/images/Emblem_Silver.png"]})
-            var url = "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/chewiejackelope?api_key=" + APIKEY;
-            var byname;
+            var platform = "na1";
+            var region = "americas";
+            if (String(args[0]).substr(0, 2) == "--") {
+                ret = getRegion(String(args[0]).substring(2));
+                platform = ret[0];
+                region = ret[1];
+                // handle region names
+                args = args.slice(1);
+            }
+            username = "";
+            args.forEach(word => username = username.concat(word + "%20"));
+            username = username.substr(0, username.length - 3);
+            console.log("plat: " + platform);
+            console.log("region: " + region);
+            console.log("username: " + username);
+            var url = "https://" + platform + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + username + "?api_key=" + APIKEY;
+            console.log(url);
+            var summoner, matches, match, rank;
             request(url, function(error, response, body) {
                 console.log(body);
-                byname = JSON.parse(body);
-                msg.channel.send("omg its " + byname.name);
-                url = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/" + byname.puuid + "/ids?start=0&count=20&api_key=" + APIKEY;
+                summoner = JSON.parse(body);
+                if (summoner.name == null) {
+                    msg.channel.send("Summoner does not exist!\nCheck spelling and region");
+                    return;
+                }
+                url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/by-puuid/" + summoner.puuid + "/ids?start=0&count=20&api_key=" + APIKEY;
                 request(url, function(error, response, bodyy) {
-                    bypuuid = JSON.parse(bodyy);
-                    console.log(bypuuid);
-                    msg.channel.send("last game was " + bypuuid[0]);
-                    url = "https://americas.api.riotgames.com/lol/match/v5/matches/" + bypuuid[19] + "?api_key=" + APIKEY;
+                    matches = JSON.parse(bodyy);
+                    console.log(url);
+                    console.log(matches);
+                    url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[0] + "?api_key=" + APIKEY;
                     request(url, function(error, response, bodyyy) {
-                        bymatch = JSON.parse(bodyyy);
-                        const participants = bymatch.info.participants;
-                        var idx = 0;
-                        for (i = 0; i < 10; i++) {
-                            if (participants[i].puuid == byname.puuid) {
-                                idx = i;
-                                break;
+                        try {
+                            match = JSON.parse(bodyyy);
+                            const participants = match.info.participants;
+                            var idx = 0;
+                            for (i = 0; i < 10; i++) {
+                                if (participants[i].puuid == summoner.puuid) {
+                                    idx = i;
+                                    break;
+                                }
                             }
+                            info = match.info.participants[idx];
+                            console.log("idx = " + idx);
+                            console.log(match);
+                            url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
+                            request(url, function(error, response, bodyy) {
+                                rank = JSON.parse(bodyy);
+                                console.log(rank);
+                                var rankl = rank[rank.length-1];
+                                var rankCase =  rankl.tier.substr(0, 1) +
+                                                rankl.tier.substr(1).toLowerCase();
+                                var embed = new MessageEmbed()
+                                    .setTitle(rankCase + " " + rankl.rank + " " + 
+                                        String(rankl.leaguePoints) + " LP")
+                                    .attachFiles("./commands/images/Emblem_" + 
+                                        rankl.tier + ".png")
+                                    .setThumbnail("attachment://Emblem_" + 
+                                        rankl.tier + ".png")
+                                    .addFields(
+                                        { name: "Ranked W/L: " + 
+                                            String(rankl.wins) + "/" + 
+                                            String(rankl.losses),
+                                        value: "Winrate: " + 
+                                            String(Math.round(
+                                            rankl.wins/(rankl.losses + 
+                                            rankl.wins) * 100)) + "%"}
+                                    );
+                                msg.channel.send(embed);
+                            });
                         }
-                        info = bymatch.info.participants[idx];
-                        console.log("idx = " + idx);
-                        console.log(bymatch);
-                        msg.channel.send("you were playing " + info.championName);
+                        catch (ignore) {
+                        }
                     });
                 });
             });
         }
-        catch (erorr) {
+        catch (error) {
             console.log(error.toString());
             msg.channel.send("error");
             return;
         }
     }
+}
+
+function getRegion(plt) {
+    var platform = "";
+    var region = "";
+    if (plt == "br") { 
+        platform = "br1";  
+        region = "americas";  
+    } else if (plt == "eun" || plt == "eune") {   
+        platform = "eun1"; 
+        region = "europe";
+    } else if (plt == "euw") {
+        platform = "euw1";
+        region = "europe";
+    } else if (plt == "jp") {
+        platform = "jp1";
+        region = "asia";
+    } else if (plt == "kr") {
+        platform = "kr";
+        region = "asia";
+    } else if (plt == "lan" || plt == "la1") {
+        platform = "la1";
+        region = "americas";
+    } else if (plt == "las" || plt == "la2") {
+        platform = "la2";
+        region = "americas";
+    } else if (plt == "na" || plt == "🇺🇸") {
+        platform = "na1";
+        region = "americas";
+    } else if (plt == "oc" || plt == "oce") {
+        platform = "oc1";
+        // why is oceania in the americas? did we take that much of it?
+        region = "amercias";
+    } else if (plt == "tr") {            
+        platform = "tr1";
+        region = "europe";
+    } else if (plt == "ru") {
+        platform = "ru";
+        region = "europe";
+    }
+    ret = [];
+    ret.push(platform);
+    ret.push(region);
+    return ret;
 }
