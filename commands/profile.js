@@ -40,6 +40,10 @@ async function profile(msg, args, APIKEY) {
     var summonerBody = await getBody(url);
     console.log(summonerBody);
     var summoner = JSON.parse(summonerBody);
+    if (summoner.status != null) {
+        msg.channel.send("tell jack to update the api key");
+        return;
+    }
     if (summoner.name == null) {
         msg.channel.send("Summoner does not exist!\nCheck spelling and region");
         return;
@@ -50,13 +54,52 @@ async function profile(msg, args, APIKEY) {
     console.log(url);
     var matches = JSON.parse(matchesBody);
     console.log(matches);
-    url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[0] + "?api_key=" + APIKEY;
+    var match = [];
+    for (var i = 0; i < 3; i++) {
+        url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[i] + "?api_key=" + APIKEY;
+        match.push(await getMatch(url, summoner.puuid, msg.createdTimestamp));
+    }
+    console.log(match[0][0]);
+    url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
+    var rankBody = await getBody(url);
+    var rank = JSON.parse(rankBody);
+    var rankl = rank[rank.length - 1];
+    var rankCase = rankl.tier.substr(0, 1) +
+        rankl.tier.substr(1).toLowerCase();
+    var embed = new MessageEmbed()
+        .setTitle(rankCase + " " + rankl.rank + " " +
+            String(rankl.leaguePoints) + " LP")
+        .attachFiles("resources/images/Emblem_" +
+            rankl.tier + ".png")
+        .setThumbnail("attachment://Emblem_" +
+            rankl.tier + ".png")
+        .addFields(
+            {
+                name:
+                    String(rankl.wins) + "W " +
+                    String(rankl.losses) + "L | " +
+                    String(Math.round(
+                        rankl.wins / (rankl.losses +
+                            rankl.wins) * 100)) + "%",
+                value: "\u200B"
+            },
+            { name: '\u200B', value: "Most recent game" },
+            {
+                name: match[0][0],
+                value: match[0][1],
+                inline: true
+            }
+        );
+    msg.channel.send(embed);
+}
+
+async function getMatch(url, puuid, timestamp) {
     var matchBody = await getBody(url);
     var match = JSON.parse(matchBody);
     const participants = match.info.participants;
     var idx = 0;
     for (i = 0; i < 10; i++) {
-        if (participants[i].puuid == summoner.puuid) {
+        if (participants[i].puuid == puuid) {
             idx = i;
             break;
         }
@@ -64,12 +107,6 @@ async function profile(msg, args, APIKEY) {
     info = match.info.participants[idx];
     console.log("idx = " + idx);
     console.log(match);
-    url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
-    var rankBody = await getBody(url);
-    var rank = JSON.parse(rankBody);
-    var rankl = rank[rank.length - 1];
-    var rankCase = rankl.tier.substr(0, 1) +
-        rankl.tier.substr(1).toLowerCase();
     var win = "Win!";
     if (match.info.gameDuration < 300000) {
         win = "Remake";
@@ -97,38 +134,15 @@ async function profile(msg, args, APIKEY) {
             }
         }
     }
-    var embed = new MessageEmbed()
-        .setTitle(rankCase + " " + rankl.rank + " " +
-            String(rankl.leaguePoints) + " LP")
-        .attachFiles("resources/images/Emblem_" +
-            rankl.tier + ".png")
-        .setThumbnail("attachment://Emblem_" +
-            rankl.tier + ".png")
-        .addFields(
-            {
-                name:
-                    String(rankl.wins) + "W " +
-                    String(rankl.losses) + "L | " +
-                    String(Math.round(
-                        rankl.wins / (rankl.losses +
-                            rankl.wins) * 100)) + "%",
-                value: "\u200B"
-            },
-            { name: '\u200B', value: "Most recent game" },
-            {
-                name: win + "\n" +
-                    info.championName + "\n" +
-                    get_dhm(msg.createdTimestamp -
-                        match.info.gameStartTimestamp -
-                        match.info.gameDuration),
-                value: RSDict[primaryString] + " " + String(info.kills) + "/" +
-                    String(info.deaths) + "/" +
-                    String(info.assists) + " \n" +
-                    RSDict[secondaryString],
-                inline: true
-            }
-        );
-    msg.channel.send(embed);
+    return win + "\n" +
+        info.championName + "\n" +
+        get_dhm(timestamp -
+        match.info.gameStartTimestamp -
+        match.info.gameDuration),
+        RSDict[primaryString] + " " + String(info.kills) + "/" +
+        String(info.deaths) + "/" +
+        String(info.assists) + " \n" +
+        RSDict[secondaryString];
 }
 
 function getBody(url) {
@@ -137,7 +151,7 @@ function getBody(url) {
             request(url, function(error, response, body) {
                 resolve(body);
             });
-        }, 1000);
+        }, 100);
     });
 }
 
