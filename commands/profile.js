@@ -59,7 +59,7 @@ async function profile(msg, args, APIKEY) {
         url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[i] + "?api_key=" + APIKEY;
         match.push(await getMatch(url, summoner.puuid, msg.createdTimestamp));
     }
-    console.log(match[0][0]);
+    console.log(match);
     url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
     var rankBody = await getBody(url);
     var rank = JSON.parse(rankBody);
@@ -134,7 +134,7 @@ async function getMatch(url, puuid, timestamp) {
             }
         }
     }
-    return win + "\n" +
+    return [win + "\n" +
         info.championName + "\n" +
         get_dhm(timestamp -
         match.info.gameStartTimestamp -
@@ -142,7 +142,7 @@ async function getMatch(url, puuid, timestamp) {
         RSDict[primaryString] + " " + String(info.kills) + "/" +
         String(info.deaths) + "/" +
         String(info.assists) + " \n" +
-        RSDict[secondaryString];
+        RSDict[secondaryString]];
 }
 
 function getBody(url) {
