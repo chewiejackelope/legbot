@@ -55,7 +55,8 @@ async function profile(msg, args, APIKEY) {
     var matches = JSON.parse(matchesBody);
     console.log(matches);
     var match = [];
-    for (var i = 0; i < 3; i++) {
+    // for loop in case i switch back to 3 games
+    for (var i = 0; i < 1; i++) {
         url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[i] + "?api_key=" + APIKEY;
         match.push(await getMatch(url, summoner.puuid, msg.createdTimestamp));
     }
@@ -83,10 +84,14 @@ async function profile(msg, args, APIKEY) {
                             rankl.wins) * 100)) + "%",
                 value: "\u200B"
             },
-            { name: '\u200B', value: "Most recent game" },
             {
-                name: match[0][0],
-                value: match[0][1],
+                name: "Most Recent Game",
+                value: match[0][0] + "\n" + match[0][1],
+                inline: true
+            },
+            {
+                name: "idk poppy",
+                value: "twitch or somsethgnin",
                 inline: true
             }
         );
