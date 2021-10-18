@@ -3,6 +3,11 @@ module.exports = {
 	description: 'Reloads a command',
 	args: true,
 	execute(message, args) {
+		// CHECK IF THIS WORKS
+		if (message.author != "207548790717153280") {
+			message.channel.send("You don't have permission to do that");
+			return;
+		}
 		const commandName = args[0].toLowerCase();
 		const command = message.client.commands.get(commandName)
 			|| message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
