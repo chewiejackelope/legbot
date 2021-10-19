@@ -133,12 +133,16 @@ async function getMatch(url, puuid, timestamp) {
     var totalKills = 0;
     var idx = 0;
     for (i = 0; i < 10; i++) {
-        totalKills += participants[i].kills;
         if (participants[i].puuid == puuid) {
             idx = i;
         }
     }
-    info = match.info.participants[idx];
+    const partInfo = match.info.participants[idx];
+    for (i = 0; i < 10; i++) {
+        if (participants[i].teamId == partInfo.teamId) {
+            totalKills += participants[i].kills;
+        }
+    }
     console.log("idx = " + idx);
     console.log(match);
     var win = "Win!";
@@ -148,10 +152,10 @@ async function getMatch(url, puuid, timestamp) {
     if (info.win == false) {
         win = "Loss";
     }
-    var primary = info.perks.styles[0].selections[0].perk;
+    var primary = partInfo.perks.styles[0].selections[0].perk;
     var primaryFound = false;
     var primaryString = "";
-    var secondary = info.perks.styles[1].style;
+    var secondary = partInfo.perks.styles[1].style;
     var secondaryFound = false;
     var secondaryString = "";
     for (i = 0; i < runeslist.length && (primaryFound == false
@@ -185,7 +189,7 @@ async function getMatch(url, puuid, timestamp) {
         }
     }
     return win + "\n" +
-        info.championName + "\n" +
+        partInfo.championName + "\n" +
         get_dhm(timestamp -
         match.info.gameStartTimestamp -
         match.info.gameDuration) + " \n" + 
@@ -193,7 +197,7 @@ async function getMatch(url, puuid, timestamp) {
         String(info.deaths) + " / " +
         String(info.assists) + " \n" + 
         RSDict[secondaryString] + " | " +
-        String(Math.round(info.kills/totalKills * 100)) +
+        String(Math.round((info.kills + partInfo.assists)/totalKills * 100)) +
         "% KP \n" + 
         RSDict[summ1] + " \n" + 
         RSDict[summ2];
