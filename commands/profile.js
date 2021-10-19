@@ -1,9 +1,10 @@
 var request = require('request');
 const fs = require('fs');
-const RSDict = { "Aftershock": "<:Aftershock_rune:794282914317205524>", "Electrocute": "<:Electrocute_rune:794282914363342888>", "Dark Harvest": "<:Dark_Harvest_rune:794282914363473950>", "Arcane Comet": "<:Arcane_Comet_rune:794282914388115486>", "Domination": "<:Domination_icon:794282914392178699>", "Conqueror": "<:Conqueror_rune:794282914425995314>", "Grasp of the Undying": "<:Grasp_of_the_Undying_rune:794282915668033558>", "Glacial Augment": "<:Glacial_Augment_rune:794282915743793154>", "Fleet Footwork": "<:Fleet_Footwork_rune:794282915956523058>", "Hail of Blades": "<:Hail_of_Blades_rune:794282915965304892>", "Guardian": "<:Guardian_rune:794282916049584138>", "Inspiration": "<:Inspiration_icon:794282916112367656>", "Sorcery": "<:Sorcery_icon:794282916116561941>", "Resolve": "<:Resolve_icon:794282916129013770>", "Lethal Tempo": "<:Lethal_Tempo_rune:794282916145790986>", "Press the Attack": "<:Press_the_Attack_rune:794282916339253288>", "Phase Rush": "<:Phase_Rush_rune:794282916438867999>", "Predator": "<:Predator_rune:794282916438868009>", "Precision": "<:Precision_icon:794282916439785502>", "Prototype: Omnistone": "<:Prototype_Omnistone_rune:794282916443586560>", "Summon Aery": "<:Summon_Aery_rune:794282916443717672>", "Unsealed Spellbook": "<:Unsealed_Spellbook_rune:794282916452106270>", "Challenging Smite": "<:Challenging_Smite:794400581061312512>", "Barrier": "<:Barrier:794400581081890816>", "Chilling Smite": "<:Chilling_Smite:794400581090803722>", "Clarity": "<:Clarity:794400581094866954>", "Exhaust": "<:Exhaust:794400581217288383>", "Ignite": "<:Ignite:794400581145722931>", "Mark": "<:Mark:794400581174951958>", "Cleanse": "<:Cleanse:794400581288067102>", "Smite": "<:Smite:794400581171150869>", "Heal": "<:Heal:794400581346263071>", "Flash": "<:Flash:794400581384142858>", "Ghost": "<:Ghost:794400580965498911>", "Teleport": "<:Teleport:794400581518491649>", }
+var RSDict;
 var runeslist;
 try {
-    var runeslist = JSON.parse(fs.readFileSync("/Users/jackb/Documents/legbot/legbot/resources/en_US/runesReforged.json", "utf-8"));
+    RSDict = JSON.parse(fs.readFileSync("./resources/runessumms.json"))
+    runeslist = JSON.parse(fs.readFileSync("./resources/en_US/runesReforged.json", "utf-8"));
 }
 catch (err) {
     console.log(err);
@@ -11,7 +12,7 @@ catch (err) {
 }
 var summ;
 try {
-    summ = JSON.parse(fs.readFileSync("/Users/jackb/Documents/legbot/legbot/resources/en_US/summoner.json", "utf-8"));
+    summ = JSON.parse(fs.readFileSync("./resources/en_US/summoner.json", "utf-8"));
 }
 catch (err) {
     console.log(err);
@@ -56,7 +57,7 @@ async function profile(msg, args, APIKEY) {
     var summonerBody = await getBody(url);
     console.log(summonerBody);
     var summoner = JSON.parse(summonerBody);
-    if (summoner.status != null) {
+    if (summoner.status != null && summoner.status.status_code == 403) {
         msg.channel.send("tell jack to update the api key");
         return;
     }
@@ -74,7 +75,8 @@ async function profile(msg, args, APIKEY) {
     // for loop in case i switch back to 3 games
     for (var i = 0; i < 1; i++) {
         url = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[i] + "?api_key=" + APIKEY;
-        match.push(await getMatch(url, summoner.puuid, msg.createdTimestamp));
+        timeurl = "https://" + region + ".api.riotgames.com/lol/match/v5/matches/" + matches[i] + "/timeline?api_key=" + APIKEY;
+        match.push(await getMatch(url, timeurl, summoner.puuid, msg.createdTimestamp));
     }
     console.log(match);
     url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
@@ -90,8 +92,6 @@ async function profile(msg, args, APIKEY) {
     var rankCase = rankl.tier.substr(0, 1) +
         rankl.tier.substr(1).toLowerCase();
     console.log(rankBody);
-    var summ;
-
     var embed = new MessageEmbed()
         .setAuthor(summoner.name + "'s profile", "attachment://" + summoner.profileIconId + ".png")
         .setTitle("Current rank: " + rankCase + " " + rankl.rank + " " +
@@ -126,7 +126,7 @@ async function profile(msg, args, APIKEY) {
     msg.channel.send(embed);
 }
 
-async function getMatch(url, puuid, timestamp) {
+async function getMatch(url, timeurl, puuid, timestamp) {
     var matchBody = await getBody(url);
     var match = JSON.parse(matchBody);
     const participants = match.info.participants;
@@ -149,7 +149,7 @@ async function getMatch(url, puuid, timestamp) {
     if (match.info.gameDuration < 300000) {
         win = "Remake";
     }
-    if (info.win == false) {
+    if (partInfo.win == false) {
         win = "Loss";
     }
     var primary = partInfo.perks.styles[0].selections[0].perk;
@@ -179,28 +179,34 @@ async function getMatch(url, puuid, timestamp) {
     const summkeys = Object.keys(summ.data);
     for (i = 0; i < summkeys.length && (summ1Found == false
         || summ2Found == false); i++) {
-        if (info.summoner1Id == summ.data[summkeys[i]].key) {
+        if (partInfo.summoner1Id == summ.data[summkeys[i]].key) {
             summ1 = summ.data[summkeys[i]].name;
             summ1Found = true;
         }
-        if (info.summoner2Id == summ.data[summkeys[i]].key) {
+        if (partInfo.summoner2Id == summ.data[summkeys[i]].key) {
             summ2 = summ.data[summkeys[i]].name;
             summ2Found = true;
         }
     }
+    var realStartBody = await getBody(timeurl);
+    var realStart = JSON.parse(realStartBody);
+    const realStartStamp = realStart.info.frames[1].events[0].timestamp * 10 + match.info.gameStartTimestamp;
+    console.log(realStartStamp);
+    var cs = partInfo.neutralMinionsKilled + partInfo.totalMinionsKilled;
     return win + "\n" +
         partInfo.championName + "\n" +
         get_dhm(timestamp -
         match.info.gameStartTimestamp -
         match.info.gameDuration) + " \n" + 
-        RSDict[primaryString] + " | " + String(info.kills) + " / " +
-        String(info.deaths) + " / " +
-        String(info.assists) + " \n" + 
+        RSDict[primaryString] + " | " + String(partInfo.kills) + " / " +
+        String(partInfo.deaths) + " / " +
+        String(partInfo.assists) + " \n" + 
         RSDict[secondaryString] + " | " +
-        String(Math.round((info.kills + partInfo.assists)/totalKills * 100)) +
+        String(Math.round((partInfo.kills + partInfo.assists)/totalKills * 100)) +
         "% KP \n" + 
-        RSDict[summ1] + " \n" + 
-        RSDict[summ2];
+        RSDict[summ1] + " | " + get_minutes(match.info.gameEndTimestamp - realStartStamp) + " \n" + 
+        RSDict[summ2] + " | " + String(cs) + 
+        " (" + String(Math.round(cs / (Math.round((match.info.gameEndTimestamp - realStartStamp)/6000))/10)) + ") CS";
 }
 
 function getBody(url) {
@@ -278,6 +284,12 @@ function get_dhm(seconds) {
         return String(m) + " Minute ago";
     }
     return String(m) + " Minutes ago";
+}
+
+function get_minutes(ms) {
+    var seconds = Math.round(ms / 1000 % 60);
+    var minutes = Math.round(ms / 60000);
+    return String(minutes) + " minutes " + String(seconds) + " seconds";
 }
 
 
