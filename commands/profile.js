@@ -36,6 +36,7 @@ module.exports = {
 }
 
 async function profile(msg, args, APIKEY) {
+    msg.channel.startTyping();
     console.log(args);
     var platform = "na1";
     var region = "americas";
@@ -92,9 +93,15 @@ async function profile(msg, args, APIKEY) {
     var rankCase = rankl.tier.substr(0, 1) +
         rankl.tier.substr(1).toLowerCase();
     console.log(rankBody);
+    var div = rankl.rank + " ";
+    if (rankCase == "Challenger" || rankCase == "Grandmaster" || rankCase == "Master") {
+        div = "";
+    }
+    url = "https://" + platform + ".api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
+    var mastery = await getMastery(url);
     var embed = new MessageEmbed()
         .setAuthor(summoner.name + "'s profile", "attachment://" + summoner.profileIconId + ".png")
-        .setTitle("Current rank: " + rankCase + " " + rankl.rank + " " +
+        .setTitle("Current rank: " + rankCase + " " + div +
             String(rankl.leaguePoints) + " LP")
         .setURL('https://matias.ma/nsfw/')
         .attachFiles("resources/images/Emblem_" +
@@ -118,11 +125,12 @@ async function profile(msg, args, APIKEY) {
                 inline: true
             },
             {
-                name: "idk poppy",
-                value: "twitch or somsethgnin",
+                name: "Highest Champion Masteries",
+                value: mastery,
                 inline: true
             }
         );
+    msg.channel.stopTyping();
     msg.channel.send(embed);
 }
 
@@ -145,8 +153,8 @@ async function getMatch(url, timeurl, puuid, timestamp) {
     }
     console.log("idx = " + idx);
     console.log(match);
-    var win = "Win!";
-    if (match.info.gameDuration < 300000) {
+    var win = "Victory!";
+    if (match.info.gameDuration < 300) {
         win = "Remake";
     }
     if (partInfo.win == false) {
@@ -206,7 +214,23 @@ async function getMatch(url, timeurl, puuid, timestamp) {
         "% KP \n" + 
         RSDict[summ1] + " | " + get_minutes(match.info.gameEndTimestamp - realStartStamp) + " \n" + 
         RSDict[summ2] + " | " + String(cs) + 
-        " (" + String(Math.round(cs / (Math.round((match.info.gameEndTimestamp - realStartStamp)/6000))/10)) + ") CS";
+        " (" + String((Math.round(cs / 
+            ((match.info.gameEndTimestamp - realStartStamp)/600000)))/10) + ") CS";
+}
+
+async function getMastery(url) {
+    var mastBody = await getBody(url);
+    var mastery = JSON.parse(mastBody);
+    console.log(mastery);
+    return "<:Poppy:897540086609092648>" + " **Poppy** \nLevel " + 
+    mastery[0].championLevel + " <:m7:900474020376502272> | " + 
+    mastery[0].championPoints + " Points\n" + 
+    "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
+    mastery[1].championLevel + " <:m7:900474020376502272> | " +
+    mastery[1].championPoints + " Points\n" + 
+    "<:Rengar:897540086487449722>" + " **Rengar** \nLevel " + 
+    mastery[2].championLevel + " <:m7:900474020376502272> | " + 
+    mastery[2].championPoints + " Points\n";
 }
 
 function getBody(url) {
