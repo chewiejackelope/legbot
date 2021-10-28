@@ -4,7 +4,7 @@ var RSDict;
 var runeslist;
 try {
     RSDict = JSON.parse(fs.readFileSync("./resources/runessumms.json"))
-    runeslist = JSON.parse(fs.readFileSync("./resources/en_US/runesReforged.json", "utf-8"));
+    runeslist = JSON.parse(fs.readFileSync("./resources/en_US/runesReforged.json"));
 }
 catch (err) {
     console.log(err);
@@ -12,7 +12,7 @@ catch (err) {
 }
 var summ;
 try {
-    summ = JSON.parse(fs.readFileSync("./resources/en_US/summoner.json", "utf-8"));
+    summ = JSON.parse(fs.readFileSync("./resources/en_US/summoner.json"));
 }
 catch (err) {
     console.log(err);
@@ -221,16 +221,16 @@ async function getMatch(url, timeurl, puuid, timestamp) {
 async function getMastery(url) {
     var mastBody = await getBody(url);
     var mastery = JSON.parse(mastBody);
-    console.log(mastery);
     return "<:Poppy:897540086609092648>" + " **Poppy** \nLevel " + 
-    mastery[0].championLevel + " <:m7:900474020376502272> | " + 
-    mastery[0].championPoints + " Points\n" + 
-    "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
-    mastery[1].championLevel + " <:m7:900474020376502272> | " +
-    mastery[1].championPoints + " Points\n" + 
-    "<:Rengar:897540086487449722>" + " **Rengar** \nLevel " + 
-    mastery[2].championLevel + " <:m7:900474020376502272> | " + 
-    mastery[2].championPoints + " Points\n";
+        mastery[0].championLevel + " <:m7:900474020376502272> | " + 
+        mastery[0].championPoints + " Points\n" + 
+        "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
+        mastery[1].championLevel + " <:m7:900474020376502272> | " +
+        mastery[1].championPoints + " Points\n" + 
+        "<:Blitzcrank:897539247815417927>" + " **Blitzcrank** \nLevel " + 
+        mastery[2].championLevel + " <:m7:900474020376502272> | " + 
+        mastery[2].championPoints + " Points\n" + 
+        "<:Rengar:897540086487449722> <:m7:900474020376502272> | <:Bard:897539247349854289> <:m7:900474020376502272> | <:Darius:897539247882534922> <:m6:900474020468772965>";
 }
 
 function getBody(url) {
