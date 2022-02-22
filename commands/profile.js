@@ -18,6 +18,15 @@ catch (err) {
     console.log(err);
     return;
 }
+// i have misunderstood how jsons work, i will now atone for my sins
+var champs;
+try {
+    champs = JSON.parse(fs.readFileSync("./resources/champions.json"));
+}
+catch (err) {
+    console.log(err);
+    return;
+}
 const { MessageEmbed } = require('discord.js');
 
 module.exports = {
@@ -219,16 +228,17 @@ async function getMatch(url, timeurl, puuid, timestamp) {
 }
 
 async function getMastery(url) {
-    var mastBody = await getBody(url);
-    var mastery = JSON.parse(mastBody);
+    mastBody = await getBody(url);
+    mastery = JSON.parse(mastBody);
+
     console.log(mastery);
-    return "<:Poppy:897540086609092648>" + " **Poppy** \nLevel " + 
+    return champs[mastery[1].championId] + " **Poppy** \nLevel " + 
     mastery[0].championLevel + " <:m7:900474020376502272> | " + 
     mastery[0].championPoints + " Points\n" + 
-    "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
+    champs[mastery[1].championId] + " **Twitch** \nLevel " +
     mastery[1].championLevel + " <:m7:900474020376502272> | " +
     mastery[1].championPoints + " Points\n" + 
-    "<:Rengar:897540086487449722>" + " **Rengar** \nLevel " + 
+    champs[mastery[2].championId]  + " **Rengar** \nLevel " + 
     mastery[2].championLevel + " <:m7:900474020376502272> | " + 
     mastery[2].championPoints + " Points\n";
 }
