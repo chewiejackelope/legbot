@@ -4,7 +4,7 @@ var RSDict;
 var runeslist;
 try {
     RSDict = JSON.parse(fs.readFileSync("./resources/runessumms.json"))
-    runeslist = JSON.parse(fs.readFileSync("./resources/en_US/runesReforged.json", "utf-8"));
+    runeslist = JSON.parse(fs.readFileSync("./resources/en_US/runesReforged.json"));
 }
 catch (err) {
     console.log(err);
@@ -12,16 +12,25 @@ catch (err) {
 }
 var summ;
 try {
-    summ = JSON.parse(fs.readFileSync("./resources/en_US/summoner.json", "utf-8"));
+    summ = JSON.parse(fs.readFileSync("./resources/en_US/summoner.json"));
 }
 catch (err) {
     console.log(err);
     return;
 }
-// i have misunderstood how jsons work, i will now atone for my sins
+
 var champs;
 try {
     champs = JSON.parse(fs.readFileSync("./resources/champions.json"));
+}
+catch (err) {
+    console.log(err);
+    return;
+}
+
+var champInfo;
+try {
+    champInfo = JSON.parse(fs.readFileSync("./resources/en_US/champion.json"));
 }
 catch (err) {
     console.log(err);
@@ -210,8 +219,9 @@ async function getMatch(url, timeurl, puuid, timestamp) {
     const realStartStamp = realStart.info.frames[1].events[0].timestamp * 10 + match.info.gameStartTimestamp;
     console.log(realStartStamp);
     var cs = partInfo.neutralMinionsKilled + partInfo.totalMinionsKilled;
-    return win + "\n" +
-        partInfo.championName + "\n" +
+    return "**" + win + "**\n" +
+        champs[partInfo.championId] + " " + 
+        champInfo.data[partInfo.championName]["name"] + "\n" +
         get_dhm(timestamp -
         match.info.gameStartTimestamp -
         match.info.gameDuration) + " \n" + 
@@ -228,19 +238,37 @@ async function getMatch(url, timeurl, puuid, timestamp) {
 }
 
 async function getMastery(url) {
+<<<<<<< HEAD
     mastBody = await getBody(url);
     mastery = JSON.parse(mastBody);
-
-    console.log(mastery);
-    return champs[mastery[1].championId] + " **Poppy** \nLevel " + 
+    
+    console.log(mastery[0].championName);
+    return champs[mastery[0].championId] + " **" + 
+    champInfo.data[mastery[0].championName]["name"]+ "** \nLevel " + 
     mastery[0].championLevel + " <:m7:900474020376502272> | " + 
     mastery[0].championPoints + " Points\n" + 
-    champs[mastery[1].championId] + " **Twitch** \nLevel " +
+    champs[mastery[1].championId] + " **" + 
+    champInfo.data[mastery[1].championName]["name"]+ "** \nLevel " +
     mastery[1].championLevel + " <:m7:900474020376502272> | " +
     mastery[1].championPoints + " Points\n" + 
-    champs[mastery[2].championId]  + " **Rengar** \nLevel " + 
+    champs[mastery[2].championId] + " **" + 
+    champInfo.data[mastery[2].championName]["name"]+ "** \nLevel " + 
     mastery[2].championLevel + " <:m7:900474020376502272> | " + 
     mastery[2].championPoints + " Points\n";
+=======
+    var mastBody = await getBody(url);
+    var mastery = JSON.parse(mastBody);
+    return "<:Poppy:897540086609092648>" + " **Poppy** \nLevel " + 
+        mastery[0].championLevel + " <:m7:900474020376502272> | " + 
+        mastery[0].championPoints + " Points\n" + 
+        "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
+        mastery[1].championLevel + " <:m7:900474020376502272> | " +
+        mastery[1].championPoints + " Points\n" + 
+        "<:Blitzcrank:897539247815417927>" + " **Blitzcrank** \nLevel " + 
+        mastery[2].championLevel + " <:m7:900474020376502272> | " + 
+        mastery[2].championPoints + " Points\n" + 
+        "<:Rengar:897540086487449722> <:m7:900474020376502272> | <:Bard:897539247349854289> <:m7:900474020376502272> | <:Darius:897539247882534922> <:m6:900474020468772965>";
+>>>>>>> c20583595d8af0b0d87098a443e658aba6ca76cb
 }
 
 function getBody(url) {
