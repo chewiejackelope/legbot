@@ -29,8 +29,10 @@ catch (err) {
 }
 
 var champInfo;
+var mastery_dict;
 try {
     champInfo = JSON.parse(fs.readFileSync("./resources/en_US/champion.json"));
+    mastery_dict = JSON.parse(fs.readFileSync("./resources/mastery.json"));
 }
 catch (err) {
     console.log(err);
@@ -108,35 +110,45 @@ async function profile(msg, args, APIKEY) {
         }
     }
     var rankl = rank[rankidx];
-    var rankCase = rankl.tier.substr(0, 1) +
-        rankl.tier.substr(1).toLowerCase();
-    console.log(rankBody);
-    var div = rankl.rank + " ";
-    if (rankCase == "Challenger" || rankCase == "Grandmaster" || rankCase == "Master") {
+    if (rankl == null) {
+        rankCase = "Unranked";
         div = "";
+        lp = "";
+        wl = {name:'\u200b',
+                value:'\u200b'};
+    }
+    else {
+        rankCase = rankl.tier.substr(0, 1) +
+            rankl.tier.substr(1).toLowerCase();
+        console.log(rankBody);
+        div = rankl.rank + " ";
+        if (rankCase == "Challenger" || rankCase == "Grandmaster" || rankCase == "Master") {
+            div = "";
+        }
+        lp = String(rankl.leaguePoints) + " LP";
+        wl = 
+        {   name:
+                "Ranked Win/Loss: " + String(rankl.wins) + "W/" +
+                String(rankl.losses) + "L",
+            value:
+                "Winrate: " + String(Math.round(
+                rankl.wins / (rankl.losses +
+                rankl.wins) * 100)) + "%",}
     }
     url = "https://" + platform + ".api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
+    
     var mastery = await getMastery(url);
     var embed = new MessageEmbed()
         .setAuthor(summoner.name + "'s profile", "attachment://" + summoner.profileIconId + ".png")
-        .setTitle("Current rank: " + rankCase + " " + div +
-            String(rankl.leaguePoints) + " LP")
+        .setTitle("Current rank: " + rankCase + " " + div + lp)
         .setURL('https://matias.ma/nsfw/')
         .attachFiles("resources/images/Emblem_" +
-            rankl.tier + ".png")
+            rankCase.toUpperCase() + ".png")
         .attachFiles("resources/dragon/11.20.1/img/profileicon/" + summoner.profileIconId + ".png")
         .setThumbnail("attachment://Emblem_" +
-            rankl.tier + ".png")
+            rankCase.toUpperCase() + ".png")
         .addFields(
-            {
-                name:
-                    "Ranked Win/Loss: " + String(rankl.wins) + "W/" +
-                    String(rankl.losses) + "L",
-                value:
-                    "Winrate: " + String(Math.round(
-                    rankl.wins / (rankl.losses +
-                    rankl.wins) * 100)) + "%",
-            },
+            wl,
             {
                 name: "Most Recent Game",
                 value: match,
@@ -238,37 +250,35 @@ async function getMatch(url, timeurl, puuid, timestamp) {
 }
 
 async function getMastery(url) {
-<<<<<<< HEAD
     mastBody = await getBody(url);
     mastery = JSON.parse(mastBody);
     
-    console.log(mastery[0].championName);
-    return champs[mastery[0].championId] + " **" + 
-    champInfo.data[mastery[0].championName]["name"]+ "** \nLevel " + 
-    mastery[0].championLevel + " <:m7:900474020376502272> | " + 
-    mastery[0].championPoints + " Points\n" + 
-    champs[mastery[1].championId] + " **" + 
-    champInfo.data[mastery[1].championName]["name"]+ "** \nLevel " +
-    mastery[1].championLevel + " <:m7:900474020376502272> | " +
-    mastery[1].championPoints + " Points\n" + 
-    champs[mastery[2].championId] + " **" + 
-    champInfo.data[mastery[2].championName]["name"]+ "** \nLevel " + 
-    mastery[2].championLevel + " <:m7:900474020376502272> | " + 
-    mastery[2].championPoints + " Points\n";
-=======
-    var mastBody = await getBody(url);
-    var mastery = JSON.parse(mastBody);
-    return "<:Poppy:897540086609092648>" + " **Poppy** \nLevel " + 
-        mastery[0].championLevel + " <:m7:900474020376502272> | " + 
+    names = ["","",""]
+
+    champ_keys = Object.keys(champInfo.data);
+    champ_keys.forEach(key => {
+        for (i = 0; i < 3; i++) {
+            if (champInfo.data[key].key == mastery[i].championId) {
+                names[i] = champInfo.data[key].name;
+            }
+        }
+    })
+
+    return "\u200b\n" + champs[mastery[0].championId] + " **" + 
+        names[0] + "** \nLevel " + 
+        mastery[0].championLevel + " " +
+        mastery_dict[String(mastery[0].championLevel)] + " | " + 
         mastery[0].championPoints + " Points\n" + 
-        "<:Twitch:897540901323280444>" + " **Twitch** \nLevel " +
-        mastery[1].championLevel + " <:m7:900474020376502272> | " +
+        champs[mastery[1].championId] + " **" + 
+        names[1] + "** \nLevel " +
+        mastery[1].championLevel + " " +
+        mastery_dict[String(mastery[1].championLevel)] + " | " +
         mastery[1].championPoints + " Points\n" + 
-        "<:Blitzcrank:897539247815417927>" + " **Blitzcrank** \nLevel " + 
-        mastery[2].championLevel + " <:m7:900474020376502272> | " + 
-        mastery[2].championPoints + " Points\n" + 
-        "<:Rengar:897540086487449722> <:m7:900474020376502272> | <:Bard:897539247349854289> <:m7:900474020376502272> | <:Darius:897539247882534922> <:m6:900474020468772965>";
->>>>>>> c20583595d8af0b0d87098a443e658aba6ca76cb
+        champs[mastery[2].championId] + " **" + 
+        names[2] + "** \nLevel " + 
+        mastery[2].championLevel + " " + 
+        mastery_dict[String(mastery[2].championLevel)] + " | " + 
+        mastery[2].championPoints + " Points\n";
 }
 
 function getBody(url) {
@@ -323,6 +333,16 @@ function getRegion(plt) {
     ret.push(platform);
     ret.push(region);
     return ret;
+}
+
+function id_to_name(id) {
+    champ_keys = Object.keys(champInfo.data);
+    champ_keys.forEach(key => {
+        if (champInfo.data[key].key == id) {
+            //console.log(champInfo.data[key].name);
+            return champInfo.data[key].name;
+        }
+    })
 }
 
 function get_dhm(seconds) {
