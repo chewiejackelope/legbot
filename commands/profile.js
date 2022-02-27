@@ -80,10 +80,12 @@ async function profile(msg, args, APIKEY) {
     var summoner = JSON.parse(summonerBody);
     if (summoner.status != null && summoner.status.status_code == 403) {
         msg.channel.send("tell jack to update the api key");
+        msg.channel.stopTyping();
         return;
     }
     if (summoner.name == null) {
         msg.channel.send("Summoner does not exist!\nCheck spelling and region");
+        msg.channel.stopTyping();
         return;
     }
     // get next url from region
@@ -103,14 +105,14 @@ async function profile(msg, args, APIKEY) {
     url = "https://" + platform + ".api.riotgames.com/lol/league/v4/entries/by-summoner/" + summoner.id + "?api_key=" + APIKEY;
     var rankBody = await getBody(url);
     var rank = JSON.parse(rankBody);
-    var rankidx = 0;
+    var rankidx = -1;
     for (var i = 0; i < rank.length; i++) {
         if (rank[i].queueType == "RANKED_SOLO_5x5") {
             rankidx = i;
         }
     }
     var rankl = rank[rankidx];
-    if (rankl == null) {
+    if (rankl == null || rankidx == -1) {
         rankCase = "Unranked";
         div = "";
         lp = "";
@@ -118,9 +120,10 @@ async function profile(msg, args, APIKEY) {
                 value:'\u200b'};
     }
     else {
+        console.log("rankbody: " + rankBody);
         rankCase = rankl.tier.substr(0, 1) +
             rankl.tier.substr(1).toLowerCase();
-        console.log(rankBody);
+        console.log("rankbody: " + rankBody);
         div = rankl.rank + " ";
         if (rankCase == "Challenger" || rankCase == "Grandmaster" || rankCase == "Master") {
             div = "";
@@ -264,7 +267,7 @@ async function getMastery(url) {
         }
     })
 
-    return "\u200b\n" + champs[mastery[0].championId] + " **" + 
+    return champs[mastery[0].championId] + " **" + 
         names[0] + "** \nLevel " + 
         mastery[0].championLevel + " " +
         mastery_dict[String(mastery[0].championLevel)] + " | " + 
@@ -278,7 +281,13 @@ async function getMastery(url) {
         names[2] + "** \nLevel " + 
         mastery[2].championLevel + " " + 
         mastery_dict[String(mastery[2].championLevel)] + " | " + 
-        mastery[2].championPoints + " Points\n";
+        mastery[2].championPoints + " Points\n" +
+        champs[mastery[3].championId] + " " + 
+        mastery_dict[String(mastery[3].championLevel)] + " | " + 
+        champs[mastery[4].championId] + " " + 
+        mastery_dict[String(mastery[4].championLevel)] + " | " + 
+        champs[mastery[5].championId] + " " + 
+        mastery_dict[String(mastery[5].championLevel)];
 }
 
 function getBody(url) {
